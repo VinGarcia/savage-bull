@@ -3,22 +3,31 @@ namespace App\Command;
 
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Output\OutputInterface;
+use App\Model\Users;
 
 /**
- * Class DefaultCommand
+ * Class LoadCommand
  * A simple command that displays hello world to the console.
  *
  * @package App\Command
  */
-class DefaultCommand extends Command
+class LoadCommand extends Command
 {
+    private static $users = [];
+
     /**
      * Configure the command
      */
     protected function configure()
     {
-        $this->setName('app:hello-world');
+        $this->setName('app:load');
+        $this->addArgument(
+            'filename',
+            InputArgument::REQUIRED,
+            'The CSV file from where to load the users'
+        );
     }
 
     /**
@@ -29,6 +38,10 @@ class DefaultCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $output->write('Hello World!');
+        $filename = $input->getArgument('filename');
+
+        $users = Users::loadFromCsv($filename);
+
+        $output->writeln('There are ' . sizeof($users) . ' users.');
     }
 }

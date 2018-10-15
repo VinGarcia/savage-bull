@@ -11,7 +11,9 @@ $ php console
 ```
 
 ## PSR-2
+
 The application is PSR-2 compliant and comes with an included Code sniffer
+
 ```
 php vendor/bin/phpcs
 ```

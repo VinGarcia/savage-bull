@@ -1,7 +1,7 @@
 <?php
 
 use Symfony\Component\Console\Application;
-use App\Command\DefaultCommand;
+use App\Command\LoadCommand;
 
 /*
  * Create a console application
@@ -11,7 +11,7 @@ $application = new Application();
 /*
  * Add the commands.
  */
-$application->add(new DefaultCommand());
+$application->add(new LoadCommand());
 
 /*
  * Run the application.
