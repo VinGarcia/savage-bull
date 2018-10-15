@@ -61,6 +61,11 @@ class Users
         return self::$users;
     }
 
+    public static function saveAsJson($filename = 'users.json')
+    {
+        file_put_contents($filename, json_encode(self::$users));
+    }
+
     private static function snakeCase($text)
     {
         return trim(

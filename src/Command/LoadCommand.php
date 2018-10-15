@@ -42,6 +42,12 @@ class LoadCommand extends Command
 
         $users = Users::loadFromCsv($filename);
 
+        $jsonFilename =
+            $input->getArgument('output filename') ??
+            preg_replace('/\.[^.]*$/', '.json', $filename);
+
+        Users::saveAsJson($jsonFilename);
+
         $output->writeln('There are ' . sizeof($users) . ' users.');
     }
 }
