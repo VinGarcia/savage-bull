@@ -5,7 +5,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Output\OutputInterface;
-use App\Model\Users;
+use App\Model\Entity\User;
 
 /**
  * Class LoadCommand
@@ -15,8 +15,6 @@ use App\Model\Users;
  */
 class LoadCommand extends Command
 {
-    private static $users = [];
-
     /**
      * Configure the command
      */
@@ -27,6 +25,12 @@ class LoadCommand extends Command
             'filename',
             InputArgument::REQUIRED,
             'The CSV file from where to load the users'
+        );
+
+        $this->addArgument(
+            'output filename',
+            InputArgument::OPTIONAL,
+            'The JSON file where the users should be saved'
         );
     }
 
@@ -40,14 +44,25 @@ class LoadCommand extends Command
     {
         $filename = $input->getArgument('filename');
 
-        $users = Users::loadFromCsv($filename);
+        $users = User::loadFromCsv($filename);
 
-        $jsonFilename =
+        // Read output filename from input or use the
+        // input filename with a json extension:
+        $outputFilename =
             $input->getArgument('output filename') ??
-            preg_replace('/\.[^.]*$/', '.json', $filename);
+            self::replaceExtension($filename, 'json');
 
-        Users::saveAsJson($jsonFilename);
+        User::saveAsJson($users, $outputFilename);
 
         $output->writeln('There are ' . sizeof($users) . ' users.');
+    }
+
+    private static function replaceExtension($filename, $ext)
+    {
+        if ($ext[0] !== '.') {
+            $ext = '.' . $ext;
+        }
+
+        return preg_replace('/\.[^.]*$/', $ext, $filename);
     }
 }
