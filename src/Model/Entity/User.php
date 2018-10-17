@@ -22,7 +22,7 @@ class User
     public $longitude;
     public $date_joined;
 
-    public static function fromArray($data, $header = ATTRIBUTES)
+    public static function fromDataRow($data, $header = ATTRIBUTES)
     {
         if (sizeof($header) != sizeof(self::ATTRIBUTES)) {
             throw new Exception('Bad number of columns on header!');
@@ -72,43 +72,15 @@ class User
         return $array;
     }
 
-    public static function loadFromCsv($filename)
+    public static function toJson($users)
     {
-        $table = array_map('str_getcsv', file($filename));
-        $header = array_shift($table);
-
-        // Normalize header names to snake case:
-        $header = array_map('self::snakeCase', $header);
-
-        $users = [];
-        foreach ($table as $row) {
-            $users[] = self::fromArray($row, $header);
+        if (!is_array($users)) {
+            return json_encode(self::toArray($users));
+        } else {
+            return json_encode(
+                array_map('self::toArray', $users)
+            );
         }
-
-        return $users;
-    }
-
-    public static function saveAsJson($users, $filename = 'users.json')
-    {
-        $usersArray = array_map('self::toArray', $users);
-        file_put_contents($filename, json_encode($usersArray));
-    }
-
-    /**
-     * Convert any text into snake_case strings.
-     *
-     * e.g.:
-     * - 'Joined Date' -> 'joined_date'
-     * - 'JoinedDate'  -> 'joined_date'
-     * - 'joinedDate'  -> 'joined_date'
-     */
-    private static function snakeCase($text)
-    {
-        return trim(
-            strtolower(
-                preg_replace('/(?<!^)\s*([A-Z])/', '_$1', $text)
-            )
-        );
     }
 
     /**
