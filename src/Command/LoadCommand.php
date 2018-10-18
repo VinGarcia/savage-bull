@@ -22,7 +22,7 @@ class LoadCommand extends Command
      */
     protected function configure()
     {
-        $this->setName('app:load');
+        $this->setName('load');
         $this->addArgument(
             'filename',
             InputArgument::REQUIRED,
@@ -105,6 +105,9 @@ class LoadCommand extends Command
         return $users;
     }
 
+    /**
+     * Converts a table row into a `key => value` array
+     */
     private static function processTableRow($row, $header)
     {
         $attributes = [];

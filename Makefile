@@ -1,6 +1,6 @@
 
-run:
-	php console app:load ../data.csv
+load:
+	php console load ../data.csv
 
 install:
 	php bin/composer.phar install
