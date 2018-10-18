@@ -5,6 +5,8 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Output\OutputInterface;
+
+use App\Exception\InvalidArgumentException;
 use App\Model\Entity\User;
 
 /**
@@ -44,7 +46,7 @@ class LoadCommand extends Command
     {
         $filename = $input->getArgument('filename');
 
-        $users = self::loadUsersFromCsv($filename);
+        $users = self::loadUsersFromCsv($filename, $input, $output);
 
         $output->writeln('There are ' . sizeof($users) . ' users.');
 
@@ -59,8 +61,11 @@ class LoadCommand extends Command
         file_put_contents($outputFilename, $json);
     }
 
-    private static function loadUsersFromCsv($filename)
-    {
+    private static function loadUsersFromCsv(
+        string $filename,
+        InputInterface $input,
+        OutputInterface $output
+    ) {
         $table = array_map('str_getcsv', file($filename));
         $header = array_shift($table);
 
@@ -69,10 +74,46 @@ class LoadCommand extends Command
 
         $users = [];
         foreach ($table as $row) {
-            $users[] = User::fromDataRow($row, $header);
+            $row_data = self::processTableRow($row, $header);
+
+            $user = null;
+            do {
+                try {
+                    $user = new User($row_data);
+                } catch (InvalidArgumentException $e) {
+                    $value = print_r($e->value, true);
+
+                    $output->writeln("Invalid value for `$e->attr_name` attribute: `$value`");
+                    $correction = readline(
+                        "\nPlease enter a valid `$e->attr_name` " .
+                        "(or press ENTER to discard this row):\n"
+                    );
+
+                    if ($correction === '') {
+                        break;
+                    }
+
+                    $row_data[$e->attr_name] = $correction;
+                }
+            } while (!isset($user));
+
+            if (isset($user)) {
+                $users[] = $user;
+            }
         }
 
         return $users;
+    }
+
+    private static function processTableRow($row, $header)
+    {
+        $attributes = [];
+        for ($i = 0; $i < sizeof($row); ++$i) {
+            $key = $header[$i];
+            $attributes[$key] = $row[$i];
+        }
+
+        return $attributes;
     }
 
     /**

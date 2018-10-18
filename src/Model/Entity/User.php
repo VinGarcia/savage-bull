@@ -2,18 +2,10 @@
 
 namespace App\Model\Entity;
 
+use App\Exception\InvalidArgumentException;
+
 class User
 {
-    public const ATTRIBUTES = [
-        'id',
-        'first_name',
-        'email',
-        'country',
-        'latitude',
-        'longitude',
-        'date_joined',
-    ];
-
     public $id;
     public $first_name;
     public $email;
@@ -22,39 +14,26 @@ class User
     public $longitude;
     public $date_joined;
 
-    public static function fromDataRow($data, $header = ATTRIBUTES)
+    public function __construct(Array $attributes)
     {
-        if (sizeof($header) != sizeof(self::ATTRIBUTES)) {
-            throw new Exception('Bad number of columns on header!');
+        $this->id = (int)$attributes['id'];
+
+        $this->first_name = (string)$attributes['first_name'];
+
+        if (!filter_var($attributes['email'], FILTER_VALIDATE_EMAIL)) {
+            throw new InvalidArgumentException($attributes['email'], 'email');
         }
 
-        if (sizeof($data) < sizeof(self::ATTRIBUTES)) {
-            throw new Exception('Bad number of columns on user data!');
-        }
+        $this->email = (string)$attributes['email'];
+        $this->country = (string)$attributes['country'];
 
-        $attributes = [];
-        for ($i = 0; $i < sizeof($data); ++$i) {
-            $key = self::ATTRIBUTES[$i];
-            $attributes[$key] = $data[$i];
-        }
+        $this->latitude = (float)$attributes['latitude'];
+        $this->longitude = (float)$attributes['longitude'];
 
-        $user = new User;
-
-        $user->id = (int)$attributes['id'];
-
-        $user->first_name = (string)$attributes['first_name'];
-        $user->email = (string)$attributes['email'];
-        $user->country = (string)$attributes['country'];
-
-        $user->latitude = (float)$attributes['latitude'];
-        $user->longitude = (float)$attributes['longitude'];
-
-        $user->date_joined = new \DateTime($attributes['date_joined']);
-
-        return $user;
+        $this->date_joined = new \DateTime($attributes['date_joined']);
     }
 
-    public static function toArray($user)
+    public static function toArray(User $user)
     {
         $array = [];
 
@@ -70,17 +49,6 @@ class User
         $array['date_joined'] = self::dateToString($user->date_joined);
 
         return $array;
-    }
-
-    public static function toJson($users)
-    {
-        if (!is_array($users)) {
-            return json_encode(self::toArray($users));
-        } else {
-            return json_encode(
-                array_map('self::toArray', $users)
-            );
-        }
     }
 
     /**
