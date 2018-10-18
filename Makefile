@@ -1,9 +1,10 @@
+code=
 
 load:
 	php console load ../data.csv
 
 pick-one:
-	php console pick-one ../data.json
+	php console pick-one ../data.json --country-code=$(code)
 
 install:
 	php bin/composer.phar install

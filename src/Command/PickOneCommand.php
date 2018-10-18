@@ -4,6 +4,7 @@ namespace App\Command;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 use App\Exception\InvalidArgumentException;
@@ -29,10 +30,12 @@ class PickOneCommand extends Command
             'The JSON file from where to read the users'
         );
 
-        $this->addArgument(
-            'output filename',
-            InputArgument::OPTIONAL,
-            'The JSON file where the users should be saved'
+        $this->addOption(
+            'country-code',
+            'c',
+            InputOption::VALUE_OPTIONAL,
+            'Country from where to pick the user',
+            ''
         );
     }
 
@@ -45,10 +48,23 @@ class PickOneCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $filename = $input->getArgument('filename');
+        $country_code = strtoupper($input->getOption('country-code'));
 
         $users = self::loadUsersFromJson($filename, $input, $output);
 
-        $output->writeln('There are ' . sizeof($users) . ' users.');
+        $message = 'There are ' . sizeof($users) . ' users';
+
+        if ($country_code !== '') {
+            $users = self::filterByCountry($users, $country_code);
+
+            $message = $message . " from `$country_code`";
+        }
+
+        $output->writeln($message . '.');
+
+        if (sizeof($users) === 0) {
+            exit(0);
+        }
 
         $output->writeln("\nRandomizing a user...\n");
 
@@ -72,5 +88,17 @@ class PickOneCommand extends Command
         }
 
         return $users;
+    }
+
+    private static function filterByCountry($users, $country)
+    {
+        $filtered_users = [];
+        foreach ($users as $user) {
+            if ($user->country === $country) {
+                $filtered_users[] = $user;
+            }
+        }
+
+        return $filtered_users;
     }
 }

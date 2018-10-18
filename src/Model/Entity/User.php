@@ -25,7 +25,7 @@ class User
         }
 
         $this->email = (string)$attributes['email'];
-        $this->country = (string)$attributes['country'];
+        $this->country = (string)strtoupper($attributes['country']);
 
         $this->latitude = (float)$attributes['latitude'];
         $this->longitude = (float)$attributes['longitude'];
