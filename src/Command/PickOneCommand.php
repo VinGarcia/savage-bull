@@ -50,7 +50,7 @@ class PickOneCommand extends Command
         $filename = $input->getArgument('filename');
         $country_code = strtoupper($input->getOption('country-code'));
 
-        $users = self::loadUsersFromJson($filename, $input, $output);
+        $users = self::loadUsersFromJson($filename);
 
         $message = 'There are ' . sizeof($users) . ' users';
 
@@ -73,11 +73,8 @@ class PickOneCommand extends Command
         echo json_encode(User::toArray($selected), JSON_PRETTY_PRINT) . "\n\n";
     }
 
-    private static function loadUsersFromJson(
-        string $filename,
-        InputInterface $input,
-        OutputInterface $output
-    ) {
+    private static function loadUsersFromJson(string $filename)
+    {
         $json_data = json_decode(
             file_get_contents($filename)
         );
