@@ -9,6 +9,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 use App\Exception\InvalidArgumentException;
 use App\Model\Entity\User;
+use App\Model\Table\UsersTable;
 
 /**
  * Class PickOneCommand
@@ -50,43 +51,34 @@ class PickOneCommand extends Command
         $filename = $input->getArgument('filename');
         $country_code = strtoupper($input->getOption('country-code'));
 
-        $users = self::loadUsersFromJson($filename);
+        UsersTable::instance()
+            ->setFilename($filename);
 
-        $message = 'There are ' . sizeof($users) . ' users';
+        $users = UsersTable::instance()->listAll();
 
         if ($country_code !== '') {
             $users = self::filterByCountry($users, $country_code);
 
-            $message = $message . " from `$country_code`";
+            $numUsers = sizeof($users);
+            $message = "There are $numUsers users from `$country_code`.";
+        } else {
+            $numUsers = sizeof($users);
+            $message = "There are $numUsers users.";
         }
 
-        $output->writeln($message . '.');
+        $output->writeln($message);
 
-        if (sizeof($users) === 0) {
+        if ($numUsers === 0) {
             exit(0);
         }
 
         $output->writeln("\nRandomizing a user...\n");
 
-        $len = sizeof($users);
+        $len = $numUsers;
         $selected = $users[rand(0, $len)];
         $output->write(
             json_encode(User::toArray($selected), JSON_PRETTY_PRINT) . "\n\n"
         );
-    }
-
-    private static function loadUsersFromJson(string $filename)
-    {
-        $json_data = json_decode(
-            file_get_contents($filename)
-        );
-
-        $users = [];
-        foreach ($json_data as $row) {
-            $users[] = new User((array)$row);
-        }
-
-        return $users;
     }
 
     private static function filterByCountry($users, $country)

@@ -8,6 +8,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 use App\Exception\InvalidArgumentException;
 use App\Model\Entity\User;
+use App\Model\Table\UsersTable;
 
 /**
  * Class LoadCommand
@@ -45,20 +46,22 @@ class LoadCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $filename = $input->getArgument('filename');
-
-        $users = self::loadUsersFromCsv($filename, $input, $output);
-
-        $output->writeln('There are ' . sizeof($users) . ' users.');
-
         $outputFilename =
             $input->getArgument('output filename') ??
             self::replaceExtension($filename, 'json');
 
-        $json = json_encode(
-            array_map('\App\Model\Entity\User::toArray', $users)
-        );
+        UsersTable::instance()
+            ->setFilename($outputFilename);
 
-        file_put_contents($outputFilename, $json);
+        self::loadUsersFromCsv($filename, $output);
+
+        $numUsers = UsersTable::instance()
+            ->count();
+
+        $output->writeln('There are ' . $numUsers . ' users.');
+
+        UsersTable::instance()
+            ->saveTable();
     }
 
     private static function loadUsersFromCsv(
@@ -71,7 +74,6 @@ class LoadCommand extends Command
         // Normalize header names to snake case:
         $header = array_map('self::snakeCase', $header);
 
-        $users = [];
         foreach ($table as $row) {
             $row_data = self::processTableRow($row, $header);
 
@@ -82,7 +84,7 @@ class LoadCommand extends Command
                 } catch (InvalidArgumentException $e) {
                     $value = print_r($e->value, true);
 
-                    $output->writeln("Invalid value for `$e->attr_name` attribute: `$value`");
+                    $output->writeln("\nInvalid value for `$e->attr_name` attribute: `$value`");
                     $correction = readline(
                         "\nPlease enter a valid `$e->attr_name` " .
                         "(or press ENTER to discard this row):\n"
@@ -97,11 +99,10 @@ class LoadCommand extends Command
             } while (!isset($user));
 
             if (isset($user)) {
-                $users[] = $user;
+                UsersTable::instance()
+                    ->addUser($user);
             }
         }
-
-        return $users;
     }
 
     /**

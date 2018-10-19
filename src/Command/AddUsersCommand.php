@@ -9,6 +9,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 use App\Exception\InvalidArgumentException;
 use App\Model\Entity\User;
+use App\Model\Table\UsersTable;
 
 /**
  * Class AddUsersCommand
@@ -41,10 +42,12 @@ class AddUsersCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $filename = $input->getArgument('filename');
+        UsersTable::instance()
+            ->setFilename($filename);
 
-        $users = self::loadUsersFromJson($filename);
+        $numUsers = UsersTable::instance()->count();
 
-        $output->writeln('There are ' . sizeof($users) . ' users.');
+        $output->writeln("There are $numUsers users.");
 
         do {
             $one_more = strtolower(
@@ -65,7 +68,10 @@ class AddUsersCommand extends Command
             }
 
             try {
-                $users[] = self::promptNewUser($output);
+                UsersTable::instance()
+                    ->addUser(
+                        self::promptNewUser($output)
+                    );
             } catch (InvalidArgumentException $e) {
                 $output->writeln("\nFailed to create user:");
                 $output->writeln(
@@ -74,26 +80,9 @@ class AddUsersCommand extends Command
                 continue;
             }
 
-            $json = json_encode(
-                array_map('\App\Model\Entity\User::toArray', $users)
-            );
-
-            file_put_contents($filename, $json);
+            UsersTable::instance()
+                ->saveTable();
         } while (true);
-    }
-
-    private static function loadUsersFromJson(string $filename)
-    {
-        $json_data = json_decode(
-            file_get_contents($filename)
-        );
-
-        $users = [];
-        foreach ($json_data as $row) {
-            $users[] = new User((array)$row);
-        }
-
-        return $users;
     }
 
     /**
