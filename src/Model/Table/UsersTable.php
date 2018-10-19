@@ -31,7 +31,7 @@ class UsersTable
 
     public function setFilename(string $filename)
     {
-        $this->$filename = $filename;
+        $this->filename = $filename;
         $this->loadTable();
     }
 
