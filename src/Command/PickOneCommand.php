@@ -70,7 +70,9 @@ class PickOneCommand extends Command
 
         $len = sizeof($users);
         $selected = $users[rand(0, $len)];
-        echo json_encode(User::toArray($selected), JSON_PRETTY_PRINT) . "\n\n";
+        $output->write(
+            json_encode(User::toArray($selected), JSON_PRETTY_PRINT) . "\n\n"
+        );
     }
 
     private static function loadUsersFromJson(string $filename)
