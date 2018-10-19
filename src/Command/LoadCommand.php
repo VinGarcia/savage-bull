@@ -63,7 +63,6 @@ class LoadCommand extends Command
 
     private static function loadUsersFromCsv(
         string $filename,
-        InputInterface $input,
         OutputInterface $output
     ) {
         $table = array_map('str_getcsv', file($filename));
